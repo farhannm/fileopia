@@ -83,8 +83,7 @@ void printParentHierarchy(Node* currentDir, int depth) {
         while (child != NULL) {
             for (int i = 0; i < depth; i++)
                 printf("    ");
-            printf("L___ ");
-            printf("%s\n", child->name);
+            printf("L %s\n", child->name);
             printParentHierarchy(child, depth + 1);
             child = child->next;
         }
@@ -129,9 +128,11 @@ void dir(Node* currentDir) {
     DIR* dr = opendir(currentDir->name);
 
     if (dr == NULL) {
-        printf("Could not open current directory\n");
+        printf("[ERROR] Could not open current directory\n");
         return;
     }
+
+    printf("\n");
 
     while ((de = readdir(dr)) != NULL) {
         // Allocate enough space for path
@@ -141,21 +142,23 @@ void dir(Node* currentDir) {
         char mod_time[20];
         getFileModifiedTime(path, mod_time);
 
-        const char* type = (de->d_type == DT_DIR) ? "<DIR>" : "";
-        printf("%-19s%-12s%-20s\n", mod_time, type, de->d_name);
+        if (de->d_type == DT_DIR) {
+            // Print directory entry
+            const char* type = "<DIR>";
+            printf("%-19s%-12s%-20s\n", mod_time, type, de->d_name);
 
-        if (de->d_type == DT_DIR && strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
-            Node* child = createNode(de->d_name, 1);
+            // Add child node
+            Node* child = createNode(de->d_name, 1); // 1 for directory type
             addChild(currentDir, child);
         }
     }
 
-    closedir(dr);
 
-    // Print directory hierarchy
-    printf("\n[current directory structure]\n");
-    printParentHierarchy(currentDir, 0);
+    printHierarchyStructure(currentDir, 1);
+
+    closedir(dr);
 }
+
 
 
 
@@ -195,24 +198,7 @@ void showCommandsInfo() {
     printf("5. \x1b[36m`copy`\x1b[0m: Copies files.\n");
     printf("6. \x1b[36m`del`\x1b[0m: Deletes files.\n");
     printf("7. \x1b[36m`ren`\x1b[0m: Renames files.\n");
-    printf("8. \x1b[36m`type`\x1b[0m: Displays the content of a text file.\n");
-    printf("9. \x1b[36m`edit`\x1b[0m: Opens a simple text editor.\n");
-    printf("10. \x1b[36m`format`\x1b[0m: Formats a disk or a diskette.\n");
-    printf("11. \x1b[36m`chkdsk`\x1b[0m: Checks a disk for errors.\n");
-    printf("12. \x1b[36m`tree`\x1b[0m: Displays a graphical representation of the directory structure.\n");
-    printf("13. \x1b[36m`attrib`\x1b[0m: Displays or changes file attributes.\n");
-    printf("14. \x1b[36m`ping`\x1b[0m: Sends ICMP Echo Request packets to test network connectivity.\n");
-    printf("15. \x1b[36m`ipconfig`\x1b[0m: Displays IP configuration information.\n");
-    printf("16. \x1b[36m`net`\x1b[0m: Manages network resources.\n");
-    printf("17. \x1b[36m`mode`\x1b[0m: Configures system devices.\n");
-    printf("18. \x1b[36m`date`\x1b[0m: Displays or sets the system date.\n");
-    printf("19. \x1b[36m`time`\x1b[0m: Displays or sets the system time.\n");
-    printf("20. \x1b[36m`set`\x1b[0m: Displays, sets, or removes environment variables.\n");
-    printf("21. \x1b[36m`tasklist`\x1b[0m: Displays a list of currently running tasks.\n");
-    printf("22. \x1b[36m`taskkill`\x1b[0m: Terminates one or more running tasks.\n");
-    printf("23. \x1b[36m`fc`\x1b[0m: Compares two files or sets of files.\n");
-    printf("24. \x1b[36m`help`\x1b[0m: Displays help information for commands.\n");
-    printf("25. \x1b[36m`exit`\x1b[0m: Exits the Command Prompt.\n");
+    printf("8. \x1b[36m`exit`\x1b[0m: Close the program.\n");
 }
 
 
