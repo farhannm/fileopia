@@ -7,7 +7,7 @@
 #include "fileopia.h"
 
 int main() {
-    Node* root = createNode("C:\\Users\\hp", 1); // Membuat root directory
+    Node* root = createNode(ROOT_PATH, 1); // Membuat root directory
     Node* currentDir = root; // Current directory awal di root
 
     char command[100], arg1[100], arg2[100];
@@ -17,7 +17,7 @@ int main() {
     printf("|      (c) Kelompok 3. On Development. All right reserved      |\n");
     printf("+--------------------------------------------------------------+\n");
 
-    printf("\n[INFO] 'show-command' for common commands\n");
+    printf("\n[INFO] \x1b[32m show-command \x1b[0m for common commands\n");
 
     while (true) {
         printf("\n%s>", currentDir->name);
@@ -30,26 +30,6 @@ int main() {
             scanf("%s", arg1);
             currentDir = cd(currentDir, arg1);
         }
-        else if (strcmp(command, "md") == 0) {
-            scanf("%s", arg1);
-            md(currentDir, arg1);
-        }
-        else if (strcmp(command, "rd") == 0) {
-            scanf("%s", arg1);
-            rd(currentDir, arg1);
-        }
-        else if (strcmp(command, "copy") == 0) {
-            scanf("%s %s", arg1, arg2);
-            copy(arg1, arg2);
-        }
-        else if (strcmp(command, "del") == 0) {
-            scanf("%s", arg1);
-            del(arg1);
-        }
-        else if (strcmp(command, "ren") == 0) {
-            scanf("%s %s", arg1, arg2);
-            ren(arg1, arg2);
-        }
         else if (strcmp(command, "show-command") == 0) {
             showCommandsInfo();
         }
@@ -60,11 +40,11 @@ int main() {
             break;
         }
         else {
-            printf("Invalid command.\n");
+            printf("[ERROR] Invalid command.\n");
         }
     }
 
-    // Menghapus struktur direktori sebelum program berakhir
     freeDirectory(root);
+
     return 0;
 }

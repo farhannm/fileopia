@@ -6,12 +6,12 @@
 #include <string.h>
 
 // Path untuk root directory
-#define ROOT_PATH "C:\\"
+#define ROOT_PATH "C:\\Users\\hp"
 
 // Struktur Node
 typedef struct Node {
     char* name;             // Nama dari direktori atau file
-    bool is_directory;       // Menandakan apakah node adalah direktori (1) atau file (0)
+    int is_directory;       // Menandakan apakah node adalah direktori (1) atau file (0)
     struct Node* parent;    // Pointer ke parent node
     struct Node* child;     // Pointer ke child node (sub-direktori atau file)
     struct Node* next;      // Pointer ke next sibling node
@@ -30,7 +30,10 @@ void addSibling(Node* node, Node* sibling);
 Node* findNode(Node* root, const char* name, int is_directory);
 
 // Fungsi untuk mencetak struktur direktori secara rekursif
-void printDirectoryStructure(Node* root, int depth);
+void printHierarchyStructure(Node* root, int depth);
+
+//Fungsi untuk mencetak struktur hirarki dari direktori saat ini
+void printParentHierarchy(Node* currentDir, int depth);
 
 // Fungsi untuk membebaskan memori dari seluruh struktur direktori
 void freeDirectory(Node* root);

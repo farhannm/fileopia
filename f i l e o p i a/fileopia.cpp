@@ -15,6 +15,7 @@ Node* createNode(const char* name, int is_directory) {
     newNode->parent = NULL;
     newNode->child = NULL;
     newNode->next = NULL;
+
     return newNode;
 }
 
@@ -50,18 +51,52 @@ Node* findNode(Node* root, const char* name, int is_directory) {
 }
 
 // Fungsi untuk mencetak struktur direktori secara rekursif
-void printDirectoryStructure(Node* root, int depth) {
+void printHierarchyStructure(Node* root, int depth) {
     if (root == NULL)
         return;
 
+    // Print current node with proper indentation
     for (int i = 0; i < depth; i++)
         printf("    ");
-
     printf("%s%s\n", root->name, (root->is_directory) ? "/" : "");
 
-    printDirectoryStructure(root->child, depth + 1);
-    printDirectoryStructure(root->next, depth);
+    // Recursively print child nodes
+    printHierarchyStructure(root->child, depth + 1);
+
+    // Recursively print sibling nodes
+    printHierarchyStructure(root->next, depth);
 }
+
+void printParentHierarchy(Node* currentDir, int depth) {
+    if (currentDir == NULL)
+        return;
+
+    // Print current directory
+    printf("%s", currentDir->name);
+    if (currentDir->parent == NULL)
+        printf(" (root)");
+
+    // Print child directories
+    if (currentDir->child != NULL) {
+        printf("\n");
+        Node* child = currentDir->child;
+        while (child != NULL) {
+            for (int i = 0; i < depth; i++)
+                printf("    ");
+            printf("L___ ");
+            printf("%s\n", child->name);
+            printParentHierarchy(child, depth + 1);
+            child = child->next;
+        }
+    }
+
+    // Recursively print parent hierarchy
+    if (currentDir->parent != NULL)
+        printParentHierarchy(currentDir->parent, depth);
+}
+
+
+
 
 // Fungsi untuk membebaskan memori dari seluruh struktur direktori
 void freeDirectory(Node* root) {
@@ -90,8 +125,6 @@ long getFileSize(const char* filename) {
 
 // Fungsi untuk menampilkan isi direktori
 void dir(Node* currentDir) {
-    printf("Directory of %s:\n\n", currentDir->name);
-
     struct dirent* de;
     DIR* dr = opendir(currentDir->name);
 
@@ -110,10 +143,20 @@ void dir(Node* currentDir) {
 
         const char* type = (de->d_type == DT_DIR) ? "<DIR>" : "";
         printf("%-19s%-12s%-20s\n", mod_time, type, de->d_name);
+
+        if (de->d_type == DT_DIR && strcmp(de->d_name, ".") != 0 && strcmp(de->d_name, "..") != 0) {
+            Node* child = createNode(de->d_name, 1);
+            addChild(currentDir, child);
+        }
     }
 
     closedir(dr);
+
+    // Print directory hierarchy
+    printf("\n[current directory structure]\n");
+    printParentHierarchy(currentDir, 0);
 }
+
 
 
 // Fungsi untuk mengubah current directory
@@ -122,92 +165,20 @@ Node* cd(Node* currentDir, const char* name) {
     if (foundDir != NULL)
         return foundDir;
     else {
-        // Check if the directory exists in the current directory
+        
         char newPath[PATH_MAX];
         snprintf(newPath, PATH_MAX, "%s\\%s", currentDir->name, name);
         if (opendir(newPath) != NULL) {
-            // Directory exists, change to it
+            
             return createNode(newPath, 1);
         }
         else {
-            printf("The system cannot find the path specified.\n");
+            printf("[ERROR] The system cannot find the path specified.\n");
             return currentDir;
         }
     }
 }
 
-
-// Fungsi untuk membuat direktori baru
-void md(Node* currentDir, const char* name) {
-    Node* newDir = createNode(name, 1);
-    addChild(currentDir, newDir);
-}
-
-// Fungsi untuk menghapus direktori
-void rd(Node* currentDir, const char* name) {
-    Node* dirToRemove = findNode(currentDir, name, 1);
-    if (dirToRemove != NULL) {
-        if (dirToRemove->child != NULL)
-            printf("Cannot remove directory '%s': Directory is not empty.\n", name);
-        else {
-            // Menghapus node dari parent
-            Node* parent = dirToRemove->parent;
-            if (parent != NULL) {
-                if (parent->child == dirToRemove)
-                    parent->child = dirToRemove->next;
-                else {
-                    Node* temp = parent->child;
-                    while (temp->next != dirToRemove)
-                        temp = temp->next;
-                    temp->next = dirToRemove->next;
-                }
-            }
-            free(dirToRemove->name);
-            free(dirToRemove);
-        }
-    }
-    else {
-        printf("Directory '%s' not found.\n", name);
-    }
-}
-
-// Fungsi untuk menyalin file
-void copy(const char* source, const char* destination) {
-    FILE* sourceFile, * destFile;
-    char ch;
-    sourceFile = fopen(source, "r");
-    if (sourceFile == NULL) {
-        printf("Unable to open source file\n");
-        return;
-    }
-    destFile = fopen(destination, "w");
-    if (destFile == NULL) {
-        printf("Unable to create destination file\n");
-        fclose(sourceFile);
-        return;
-    }
-    while ((ch = fgetc(sourceFile)) != EOF) {
-        fputc(ch, destFile);
-    }
-    fclose(sourceFile);
-    fclose(destFile);
-}
-
-// Fungsi untuk menghapus file
-void del(const char* name) {
-    if (remove(name) == 0)
-        printf("File '%s' deleted successfully.\n", name);
-    else
-        printf("Unable to delete file '%s'.\n", name);
-}
-
-// Fungsi untuk mengubah nama file
-void ren(const char* oldName, const char* newName) {
-    if (rename(oldName, newName) == 0)
-        printf("File '%s' renamed to '%s' successfully.\n", oldName, newName);
-    else
-        printf("Unable to rename file '%s'.\n", oldName);
-}
 
 // FUngsi untuk clear screen
 void clearScreen() {
@@ -216,33 +187,63 @@ void clearScreen() {
 
 // Fungsi untuk menampilkan informasi tentang commands
 void showCommandsInfo() {
-    printf("+-----+----------------------------------------------------------------------------------------------------------+\n");
-    printf("| %-4s | %-30s | %-70s |\n", "No", "Command", "Description");
-    printf("+-----+----------------------------------------------------------------------------------------------------------+\n");
-    printf("| %-4d | %-30s | %-70s |\n", 1, "dir", "Lists files and directories in the current directory.");
-    printf("| %-4d | %-30s | %-70s |\n", 2, "cd", "Changes the current directory.");
-    printf("| %-4d | %-30s | %-70s |\n", 3, "md", "Creates a new directory.");
-    printf("| %-4d | %-30s | %-70s |\n", 4, "rd", "Removes (deletes) a directory.");
-    printf("| %-4d | %-30s | %-70s |\n", 5, "copy", "Copies files.");
-    printf("| %-4d | %-30s | %-70s |\n", 6, "del", "Deletes files.");
-    printf("| %-4d | %-30s | %-70s |\n", 7, "ren", "Renames files.");
-    printf("| %-4d | %-30s | %-70s |\n", 8, "type", "Displays the content of a text file.");
-    printf("| %-4d | %-30s | %-70s |\n", 9, "edit", "Opens a simple text editor.");
-    printf("| %-4d | %-30s | %-70s |\n", 10, "format", "Formats a disk or a diskette.");
-    printf("| %-4d | %-30s | %-70s |\n", 11, "chkdsk", "Checks a disk for errors.");
-    printf("| %-4d | %-30s | %-70s |\n", 12, "tree", "Displays a graphical representation of the directory structure.");
-    printf("| %-4d | %-30s | %-70s |\n", 13, "attrib", "Displays or changes file attributes.");
-    printf("| %-4d | %-30s | %-70s |\n", 14, "ping", "Sends ICMP Echo Request packets to test network connectivity.");
-    printf("| %-4d | %-30s | %-70s |\n", 15, "ipconfig", "Displays IP configuration information.");
-    printf("| %-4d | %-30s | %-70s |\n", 16, "net", "Manages network resources.");
-    printf("| %-4d | %-30s | %-70s |\n", 17, "mode", "Configures system devices.");
-    printf("| %-4d | %-30s | %-70s |\n", 18, "date", "Displays or sets the system date.");
-    printf("| %-4d | %-30s | %-70s |\n", 19, "time", "Displays or sets the system time.");
-    printf("| %-4d | %-30s | %-70s |\n", 20, "set", "Displays, sets, or removes environment variables.");
-    printf("| %-4d | %-30s | %-70s |\n", 21, "tasklist", "Displays a list of currently running tasks.");
-    printf("| %-4d | %-30s | %-70s |\n", 22, "taskkill", "Terminates one or more running tasks.");
-    printf("| %-4d | %-30s | %-70s |\n", 23, "fc", "Compares two files or sets of files.");
-    printf("| %-4d | %-30s | %-70s |\n", 24, "help", "Displays help information for commands.");
-    printf("| %-4d | %-30s | %-70s |\n", 25, "exit", "Exits the Command Prompt.");
-    printf("+-----+-------------------------------------------+--------------------------------------------------------------+\n");
+    printf("List of commands:\n\n");
+    printf("1. \x1b[36m`dir`\x1b[0m: Lists files and directories in the current directory.\n");
+    printf("2. \x1b[36m`cd`\x1b[0m: Changes the current directory.\n");
+    printf("3. \x1b[36m`md`\x1b[0m: Creates a new directory.\n");
+    printf("4. \x1b[36m`rd`\x1b[0m: Removes (deletes) a directory.\n");
+    printf("5. \x1b[36m`copy`\x1b[0m: Copies files.\n");
+    printf("6. \x1b[36m`del`\x1b[0m: Deletes files.\n");
+    printf("7. \x1b[36m`ren`\x1b[0m: Renames files.\n");
+    printf("8. \x1b[36m`type`\x1b[0m: Displays the content of a text file.\n");
+    printf("9. \x1b[36m`edit`\x1b[0m: Opens a simple text editor.\n");
+    printf("10. \x1b[36m`format`\x1b[0m: Formats a disk or a diskette.\n");
+    printf("11. \x1b[36m`chkdsk`\x1b[0m: Checks a disk for errors.\n");
+    printf("12. \x1b[36m`tree`\x1b[0m: Displays a graphical representation of the directory structure.\n");
+    printf("13. \x1b[36m`attrib`\x1b[0m: Displays or changes file attributes.\n");
+    printf("14. \x1b[36m`ping`\x1b[0m: Sends ICMP Echo Request packets to test network connectivity.\n");
+    printf("15. \x1b[36m`ipconfig`\x1b[0m: Displays IP configuration information.\n");
+    printf("16. \x1b[36m`net`\x1b[0m: Manages network resources.\n");
+    printf("17. \x1b[36m`mode`\x1b[0m: Configures system devices.\n");
+    printf("18. \x1b[36m`date`\x1b[0m: Displays or sets the system date.\n");
+    printf("19. \x1b[36m`time`\x1b[0m: Displays or sets the system time.\n");
+    printf("20. \x1b[36m`set`\x1b[0m: Displays, sets, or removes environment variables.\n");
+    printf("21. \x1b[36m`tasklist`\x1b[0m: Displays a list of currently running tasks.\n");
+    printf("22. \x1b[36m`taskkill`\x1b[0m: Terminates one or more running tasks.\n");
+    printf("23. \x1b[36m`fc`\x1b[0m: Compares two files or sets of files.\n");
+    printf("24. \x1b[36m`help`\x1b[0m: Displays help information for commands.\n");
+    printf("25. \x1b[36m`exit`\x1b[0m: Exits the Command Prompt.\n");
 }
+
+
+//void showCommandsInfo() {
+//    printf("+-----+----------------------------------------------------------------------------------------------------------+\n");
+//    printf("| %-4s | %-30s | %-70s |\n", "No", "Command", "Description");
+//    printf("+-----+----------------------------------------------------------------------------------------------------------+\n");
+//    printf("| %-4d | %-30s | %-70s |\n", 1, "dir", "Lists files and directories in the current directory.");
+//    printf("| %-4d | %-30s | %-70s |\n", 2, "cd", "Changes the current directory.");
+//    printf("| %-4d | %-30s | %-70s |\n", 3, "md", "Creates a new directory.");
+//    printf("| %-4d | %-30s | %-70s |\n", 4, "rd", "Removes (deletes) a directory.");
+//    printf("| %-4d | %-30s | %-70s |\n", 5, "copy", "Copies files.");
+//    printf("| %-4d | %-30s | %-70s |\n", 6, "del", "Deletes files.");
+//    printf("| %-4d | %-30s | %-70s |\n", 7, "ren", "Renames files.");
+//    printf("| %-4d | %-30s | %-70s |\n", 8, "type", "Displays the content of a text file.");
+//    printf("| %-4d | %-30s | %-70s |\n", 9, "edit", "Opens a simple text editor.");
+//    printf("| %-4d | %-30s | %-70s |\n", 10, "format", "Formats a disk or a diskette.");
+//    printf("| %-4d | %-30s | %-70s |\n", 11, "chkdsk", "Checks a disk for errors.");
+//    printf("| %-4d | %-30s | %-70s |\n", 12, "tree", "Displays a graphical representation of the directory structure.");
+//    printf("| %-4d | %-30s | %-70s |\n", 13, "attrib", "Displays or changes file attributes.");
+//    printf("| %-4d | %-30s | %-70s |\n", 14, "ping", "Sends ICMP Echo Request packets to test network connectivity.");
+//    printf("| %-4d | %-30s | %-70s |\n", 15, "ipconfig", "Displays IP configuration information.");
+//    printf("| %-4d | %-30s | %-70s |\n", 16, "net", "Manages network resources.");
+//    printf("| %-4d | %-30s | %-70s |\n", 17, "mode", "Configures system devices.");
+//    printf("| %-4d | %-30s | %-70s |\n", 18, "date", "Displays or sets the system date.");
+//    printf("| %-4d | %-30s | %-70s |\n", 19, "time", "Displays or sets the system time.");
+//    printf("| %-4d | %-30s | %-70s |\n", 20, "set", "Displays, sets, or removes environment variables.");
+//    printf("| %-4d | %-30s | %-70s |\n", 21, "tasklist", "Displays a list of currently running tasks.");
+//    printf("| %-4d | %-30s | %-70s |\n", 22, "taskkill", "Terminates one or more running tasks.");
+//    printf("| %-4d | %-30s | %-70s |\n", 23, "fc", "Compares two files or sets of files.");
+//    printf("| %-4d | %-30s | %-70s |\n", 24, "help", "Displays help information for commands.");
+//    printf("| %-4d | %-30s | %-70s |\n", 25, "exit", "Exits the Command Prompt.");
+//    printf("+-----+-------------------------------------------+--------------------------------------------------------------+\n");
+//}
