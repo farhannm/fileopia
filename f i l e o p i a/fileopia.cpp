@@ -58,7 +58,11 @@ void printHierarchyStructure(Node* root, int depth) {
     // Print current node with proper indentation
     for (int i = 0; i < depth; i++)
         printf("    ");
-    printf("%s%s\n", root->name, (root->is_directory) ? "/" : "");
+
+    if (root->parent == NULL)
+        printf("\x1b[1;37m %s\x1b[0m \x1b[1;33m --root\x1b[0m", root->name);
+    else
+        printf("\n         \x1b[1;35m L\x1b[0m %s", root->name);
 
     // Recursively print child nodes
     printHierarchyStructure(root->child, depth + 1);
@@ -67,7 +71,8 @@ void printHierarchyStructure(Node* root, int depth) {
     printHierarchyStructure(root->next, depth);
 }
 
-void printParentHierarchy(Node* currentDir, int depth) {
+
+/*void printParentHierarchy(Node* currentDir, int depth) {
     if (currentDir == NULL)
         return;
 
@@ -92,10 +97,7 @@ void printParentHierarchy(Node* currentDir, int depth) {
     // Recursively print parent hierarchy
     if (currentDir->parent != NULL)
         printParentHierarchy(currentDir->parent, depth);
-}
-
-
-
+}*/
 
 // Fungsi untuk membebaskan memori dari seluruh struktur direktori
 void freeDirectory(Node* root) {
@@ -153,13 +155,12 @@ void dir(Node* currentDir) {
         }
     }
 
-
+    //Print current dir hierarchy
+    printf("\n\x1b[32m [!] Current directory hierarchy\x1b[0m\n");
     printHierarchyStructure(currentDir, 1);
 
     closedir(dr);
 }
-
-
 
 
 // Fungsi untuk mengubah current directory
@@ -188,17 +189,26 @@ void clearScreen() {
     system("cls");
 }
 
+void headerUI() {
+    printf("+--------------------------------------------------------------+\n");
+    printf("|                 f i l e o p i a [Version 1.0]                |\n");
+    printf("|      (c) Kelompok 3. On Development. All right reserved      |\n");
+    printf("+--------------------------------------------------------------+\n");
+
+    printf("\n[INFO]\x1b[1;32m show-command\x1b[0m for common commands\n");
+}
+
 // Fungsi untuk menampilkan informasi tentang commands
 void showCommandsInfo() {
-    printf("List of commands:\n\n");
-    printf("1. \x1b[36m`dir`\x1b[0m: Lists files and directories in the current directory.\n");
-    printf("2. \x1b[36m`cd`\x1b[0m: Changes the current directory.\n");
-    printf("3. \x1b[36m`md`\x1b[0m: Creates a new directory.\n");
-    printf("4. \x1b[36m`rd`\x1b[0m: Removes (deletes) a directory.\n");
-    printf("5. \x1b[36m`copy`\x1b[0m: Copies files.\n");
-    printf("6. \x1b[36m`del`\x1b[0m: Deletes files.\n");
-    printf("7. \x1b[36m`ren`\x1b[0m: Renames files.\n");
-    printf("8. \x1b[36m`exit`\x1b[0m: Close the program.\n");
+    printf("\n  [List of commands]\n");
+    printf("    1. \x1b[36m`dir`\x1b[0m: Lists files and directories in the current directory.\n");
+    printf("    2. \x1b[36m`cd`\x1b[0m: Changes the current directory.\n");
+    printf("    3. \x1b[36m`md`\x1b[0m: Creates a new directory.\n");
+    printf("    4. \x1b[36m`rd`\x1b[0m: Removes (deletes) a directory.\n");
+    printf("    5. \x1b[36m`copy`\x1b[0m: Copies files.\n");
+    printf("    6. \x1b[36m`del`\x1b[0m: Deletes files.\n");
+    printf("    7. \x1b[36m`ren`\x1b[0m: Renames files.\n");
+    printf("    8. \x1b[36m`exit`\x1b[0m: Close the program.\n");
 }
 
 

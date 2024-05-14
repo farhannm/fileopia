@@ -12,14 +12,10 @@ int main() {
 
     char command[100], arg1[100], arg2[100];
 
-    printf("+--------------------------------------------------------------+\n");
-    printf("|                 f i l e o p i a [Version 1.0]                |\n");
-    printf("|      (c) Kelompok 3. On Development. All right reserved      |\n");
-    printf("+--------------------------------------------------------------+\n");
-
-    printf("\n[INFO] \x1b[32m show-command \x1b[0m for common commands\n");
+    headerUI();
 
     while (true) {
+        
         printf("\n%s>", currentDir->name);
         scanf("%s", command);
 
@@ -35,12 +31,13 @@ int main() {
         }
         else if (strcmp(command, "cls") == 0) {
             clearScreen();
+            headerUI();
         }
         else if (strcmp(command, "exit") == 0) {
             break;
         }
         else {
-            printf("[ERROR] Invalid command.\n");
+            printf("[!] Invalid command. Please input a valid command.\n");
         }
     }
 

@@ -6,7 +6,7 @@
 #include <string.h>
 
 // Path untuk root directory
-#define ROOT_PATH "C:\\Users\\hp"
+#define ROOT_PATH "D:\\"
 
 // Struktur Node
 typedef struct Node {
@@ -66,6 +66,7 @@ void ren(const char* oldName, const char* newName);
 */
 
 void clearScreen();
+void headerUI();
 void showCommandsInfo();
 
 #endif /* FILEOPIA_H */
