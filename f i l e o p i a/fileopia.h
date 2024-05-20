@@ -5,10 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Path untuk root directory
-#define ROOT_PATH "D:\\"
+/* 
+ * 
+ * Path untuk root directory
+ *
+ */
+#define ROOT_PATH "D:"
 
-// Struktur Node
+/* 
+ * Struktur Data
+ */ 
 typedef struct Node {
     char* name;             // Nama dari direktori atau file
     int is_directory;       // Menandakan apakah node adalah direktori (1) atau file (0)
@@ -17,11 +23,24 @@ typedef struct Node {
     struct Node* next;      // Pointer ke next sibling node
 } Node;
 
+
+/*
+ *
+ * Fungsionalitas fitur dasar
+ *
+ */
+
 // Fungsi untuk membuat node baru
 Node* createNode(const char* name, int is_directory);
 
 // Fungsi untuk menambahkan child node ke parent node
 void addChild(Node* parent, Node* child);
+
+// Fungsi untuk menghapus child dari parent node
+void removeChild(Node* parent, Node* child);
+
+// Fungsi untuk menngubah nama node di struktur hirarki
+void updateNodeName(Node* currentDir, const char* oldName, const char* newName);
 
 // Fungsi untuk menambahkan sibling node
 void addSibling(Node* node, Node* sibling);
@@ -31,9 +50,6 @@ Node* findNode(Node* root, const char* name, int is_directory);
 
 // Fungsi untuk mencetak struktur direktori secara rekursif
 void printHierarchyStructure(Node* root, int depth);
-
-//Fungsi untuk mencetak struktur hirarki dari direktori saat ini
-void printParentHierarchy(Node* currentDir, int depth);
 
 // Fungsi untuk membebaskan memori dari seluruh struktur direktori
 void freeDirectory(Node* root);
@@ -57,7 +73,17 @@ void copy(const char* source, const char* destination);
 void del(const char* name);
 
 // Fungsi untuk mengubah nama file
-void ren(const char* oldName, const char* newName);
+void ren(Node* currentDir, const char* oldName, const char* newName);
+
+/*
+ *
+ * Validation
+ *
+ */
+int isValidName(const char* name);
+int directoryExists(Node* currentDir, const char* name);
+int fileExists(const char* path);
+
 
 /*
 *
