@@ -15,10 +15,9 @@ int main() {
     headerUI();
 
     while (true) {
-        
+        // Cetak prompt dengan path lengkap dari current directory
         printf("\n%s>", currentDir->name);
         scanf("%s", command);
-
 
         if (strcmp(command, "disp-struct") == 0) {
             printHierarchyStructure(currentDir, 1);
@@ -28,6 +27,7 @@ int main() {
         }
         else if (strcmp(command, "cd") == 0) {
             scanf("%s", arg1);
+            // Update current directory menggunakan fungsi cd yang telah diperbarui
             currentDir = cd(currentDir, arg1);
         }
         else if (strcmp(command, "md") == 0) {
@@ -62,7 +62,6 @@ int main() {
         }
         else {
             printf("[!] Invalid command. Please input a valid command.\n");
-            showCommandsInfo();
         }
     }
 

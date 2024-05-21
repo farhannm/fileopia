@@ -16,7 +16,7 @@
  * Struktur Data
  */ 
 typedef struct Node {
-    char* name;             // Nama dari direktori atau file
+    char* name;         // Nama dari direktori atau file
     int is_directory;       // Menandakan apakah node adalah direktori (1) atau file (0)
     struct Node* parent;    // Pointer ke parent node
     struct Node* child;     // Pointer ke child node (sub-direktori atau file)
