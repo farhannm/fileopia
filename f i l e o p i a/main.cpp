@@ -19,10 +19,7 @@ int main() {
         printf("\n%s>", currentDir->name);
         scanf("%s", command);
 
-        if (strcmp(command, "disp-struct") == 0) {
-            printHierarchyStructure(currentDir, 1);
-        }
-        else if (strcmp(command, "dir") == 0) {
+        if (strcmp(command, "dir") == 0) {
             dir(currentDir);
         }
         else if (strcmp(command, "cd") == 0) {
