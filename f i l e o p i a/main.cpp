@@ -36,8 +36,8 @@ int main() {
             rd(currentDir, arg1);
         }
         else if (strcmp(command, "copy") == 0) {
-            scanf("%s %s", arg1, arg2);
-            copy(arg1, arg2);
+            scanf("%s", arg1);
+            copy(currentDir, arg1);
         }
         else if (strcmp(command, "del") == 0) {
             scanf("%s", arg1);

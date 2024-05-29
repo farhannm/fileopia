@@ -16,7 +16,7 @@
  * Struktur Data
  */ 
 typedef struct Node {
-    char* name;         // Nama dari direktori atau file
+    char* name;             // Nama dari direktori atau file
     int is_directory;       // Menandakan apakah node adalah direktori (1) atau file (0)
     struct Node* parent;    // Pointer ke parent node
     struct Node* child;     // Pointer ke child node (sub-direktori atau file)
@@ -48,6 +48,12 @@ void addSibling(Node* node, Node* sibling);
 // Fungsi untuk mencari node dengan nama tertentu pada level yang diberikan
 Node* findNode(Node* root, const char* name, int is_directory);
 
+// Fungsi untuk mencari node dengan path lengkap
+Node* findNodeByPath(Node* root, const char* path);
+
+// Fungsi untuk meng copy node
+void copyNode(Node* source, Node* destinationParent);
+
 // Fungsi untuk mencetak struktur direktori secara rekursif
 void printHierarchyStructure(Node* root, int depth);
 
@@ -67,7 +73,7 @@ void md(Node* currentDir, const char* name);
 void rd(Node* currentDir, const char* name);
 
 // Fungsi untuk menyalin file
-void copy(const char* source, const char* destination);
+void copy(Node* root, const char* sourcePath);
 
 // Fungsi untuk menghapus file
 void del(const char* name);

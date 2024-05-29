@@ -83,6 +83,51 @@ Node* findNode(Node* currentDir, const char* name, int is_directory) {
     return NULL;
 }
 
+// Fungsi untuk mencari node dengan path lengkap
+Node* findNodeByPath(Node* root, const char* path) {
+    if (root == NULL || path == NULL || *path == '\0') {
+        return NULL;
+    }
+
+    // If the path is root itself
+    if (strcmp(root->name, path) == 0) {
+        return root;
+    }
+
+    char* pathCopy = strdup(path);
+    if (pathCopy == NULL) {
+        return NULL;
+    }
+
+    // Normalize path by converting backslashes to slashes
+    for (char* p = pathCopy; *p; ++p) {
+        if (*p == '\\') {
+            *p = '/';
+        }
+    }
+
+    Node* currentNode = root;
+    char* token = strtok(pathCopy, "/");
+    while (token != NULL) {
+        Node* child = currentNode->child;
+        while (child != NULL) {
+            if (strcmp(child->name, token) == 0) {
+                currentNode = child;
+                break;
+            }
+            child = child->next;
+        }
+        if (child == NULL) { // Directory not found
+            free(pathCopy);
+            return NULL;
+        }
+        token = strtok(NULL, "/");
+    }
+
+    free(pathCopy);
+    return currentNode;
+}
+
 // Fungsi untuk mencetak struktur direktori secara rekursif
 void printHierarchyStructure(Node* root, int depth) {
     if (root == NULL)
@@ -285,26 +330,93 @@ void rd(Node* currentDir, const char* name) {
     }
 }
 
+void copyNode(Node* source, Node* destinationParent) {
+    if (source == NULL || destinationParent == NULL || !destinationParent->is_directory) {
+        return;
+    }
+
+    // Create a copy of the source node under the destination parent
+    Node* newNode = createNode(source->name, source->is_directory);
+    if (newNode == NULL) {
+        printf("[ERROR] Failed to create node '%s'\n", source->name);
+        return;
+    }
+    newNode->parent = destinationParent;
+
+    // Link the new node to the parent's child list
+    if (destinationParent->child == NULL) {
+        destinationParent->child = newNode;
+    }
+    else {
+        Node* sibling = destinationParent->child;
+        while (sibling->next != NULL) {
+            sibling = sibling->next;
+        }
+        sibling->next = newNode;
+    }
+
+    // Recursively copy all children of the source node
+    Node* child = source->child;
+    while (child != NULL) {
+        copyNode(child, newNode);
+        child = child->next;
+    }
+}
+
+
 // Fungsi untuk menyalin file
-void copy(const char* source, const char* destination) {
-    FILE* sourceFile, * destFile;
-    char ch;
-    sourceFile = fopen(source, "r");
-    if (sourceFile == NULL) {
-        printf("Unable to open source file\n");
+void copy(Node* root, const char* sourcePath) {
+    Node* sourceNode = findNodeByPath(root, sourcePath);
+    if (sourceNode == NULL || !sourceNode->is_directory) {
+        printf("[ERROR] Source directory '%s' not found or is not a directory\n", sourcePath);
         return;
     }
-    destFile = fopen(destination, "w");
-    if (destFile == NULL) {
-        printf("Unable to create destination file\n");
-        fclose(sourceFile);
+
+    char destPath[PATH_MAX];
+    snprintf(destPath, PATH_MAX, "%s--copy", sourcePath);
+
+    const char* parentPathEnd = strrchr(sourcePath, '/');
+    if (!parentPathEnd) {
+        parentPathEnd = strrchr(sourcePath, '\\');
+    }
+
+    Node* parentDir = NULL;
+    if (parentPathEnd) {
+        char parentPath[PATH_MAX];
+        strncpy(parentPath, sourcePath, parentPathEnd - sourcePath);
+        parentPath[parentPathEnd - sourcePath] = '\0';
+        parentDir = findNodeByPath(root, parentPath);
+    }
+    else {
+        parentDir = root;
+    }
+
+    if (parentDir == NULL || !parentDir->is_directory) {
+        printf("[ERROR] Parent directory of '%s' not found or is not a directory\n", sourcePath);
         return;
     }
-    while ((ch = fgetc(sourceFile)) != EOF) {
-        fputc(ch, destFile);
+
+    Node* copiedNode = createNode(destPath + ((parentDir == root) ? 0 : (parentPathEnd - sourcePath) + 1), 1);
+    copiedNode->parent = parentDir;
+
+    if (parentDir->child == NULL) {
+        parentDir->child = copiedNode;
     }
-    fclose(sourceFile);
-    fclose(destFile);
+    else {
+        Node* sibling = parentDir->child;
+        while (sibling->next != NULL) {
+            sibling = sibling->next;
+        }
+        sibling->next = copiedNode;
+    }
+
+    Node* child = sourceNode->child;
+    while (child != NULL) {
+        copyNode(child, copiedNode);
+        child = child->next;
+    }
+
+    printf("[SUCCESS] Directory '%s' copied to '%s'\n", sourcePath, destPath);
 }
 
 // Fungsi untuk menghapus file
